@@ -9,16 +9,29 @@ class CustomerReports(scrapy.Spider):
 
     """Spider that retrieves raw customer reports about companies.
 
-    This spider reaches the consumidor.gov.br website to crawl the data from
-    the customer raw reports page. The specific page containing this information
-    is composed by a hidden form that is submitted to retrieve the reports.
-    For this reason, this spider reaches the initial page and then trigger the
-    form submission to obtain the data. The website returns 10 values per call.
+    This spider reaches the consumidor.gov.br website to crawl the data
+    from the customer raw reports page. The specific page containing
+    this information is composed by a hidden form that is submitted to
+    retrieve the reports. For this reason, this spider reaches the
+    initial page and then trigger the form submission to obtain the
+    data. The website returns 10 values per call.
 
-    The default Scrapy `parse` method will perform the form submission.
+    Attributes
+    ----------
+    name : str
+        the spider name used by Scrapy to start the spider
+    start_urls : list
+        URLs where the spider should start the crawl from
 
-    The `parse_response` method is a callback for `parse` and will crawl the
-    required data from the website response, loading the scrapy items.
+    Methods
+    ----------
+    parse(self, response)
+        The default Scrapy method to parse the crawled data. In this
+        case, gets the main page data and triggers the hidden form.
+    parse_response(self, response)
+        A callback for `parse` method that handles the crawled form.
+        This method will select the required nodes and loads the scrapy
+        items that were defined in the Report items object.
     """
 
     name = 'reports'
