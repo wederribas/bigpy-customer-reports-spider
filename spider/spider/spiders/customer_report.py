@@ -20,6 +20,8 @@ class CustomerReports(scrapy.Spider):
     ----------
     name : str
         the spider name used by Scrapy to start the spider
+    allowed_domains : list
+        contains the list of domains that the spider is allowed to crawl
     start_urls : list
         URLs where the spider should start the crawl from
 
@@ -35,6 +37,7 @@ class CustomerReports(scrapy.Spider):
     """
 
     name = 'reports'
+    allowed_domains = ['consumidor.gov.br']
     start_urls = [
         'https://www.consumidor.gov.br/pages/indicador/relatos/abrir'
     ]
