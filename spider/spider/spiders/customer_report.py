@@ -39,19 +39,17 @@ class CustomerReports(scrapy.Spider):
         """Parses the response data, crawling the required fields and loading
         the Item to populate the final data set."""
 
-        for crawled_report in response.css('div.cartao-relato'):
+        index = 0
+        report_card_path = '//div[contains(@class,"cartao-relato")]'
+
+        for crawled_report in response.xpath(report_card_path):
             # Loader responsible to process input and populate an item
             loader = ItemLoader(item=Report(), response=response)
 
-            # Generate index from own element counter
-            index = crawled_report.css(
-                'h5.relatos-contador::text').extract_first()
-            index = int(index) - 1
-
             loader.add_value(
                 'company_name',
-                crawled_report.css(
-                    'h3.relatos-nome-empresa a::text').extract_first()
+                crawled_report.xpath(
+                    '//*[@class="relatos-nome-empresa"]/a/text()').extract_first()
             )
 
             users_report = crawled_report.xpath(
@@ -81,8 +79,8 @@ class CustomerReports(scrapy.Spider):
 
             user_date_location = crawled_report.xpath(
                 '//div[strong="Relato"]'
-                '/span[descendant::i[@class="glyphicon glyphicon-calendar"]]')
-            user_date_location = user_date_location.css('span::text').extract()
+                '/span[descendant::i[@class="glyphicon glyphicon-calendar"]]'
+                '/text()').extract()
             user_date_location = [
                 item for item in user_date_location if item != ' ']
 
@@ -90,5 +88,7 @@ class CustomerReports(scrapy.Spider):
             date, location = user_date_location[index].split(',')
             loader.add_value('date', date)
             loader.add_value('location', location)
+
+            index += 1
 
             yield loader.load_item()
