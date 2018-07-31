@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import os
+from urllib.parse import quote_plus
+
 # Scrapy settings for spider project
 #
 # For simplicity, this file contains only settings considered important or
@@ -90,3 +93,11 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 FEED_EXPORT_ENCODING = 'utf-8'
+ITEM_PIPELINES = {
+    'spider.pipelines.CustomerReportsPipeline': 0,
+}
+
+# MongoDB settings
+password = quote_plus(os.environ.get('MONGODB_PASSWORD'))
+MONGODB_URI = f'mongodb+srv://bigpyadmin:{password}@bigpy-azwev.mongodb.net/test?retryWrites=true'
+MONGODB_DB = 'bigpy'
