@@ -3,11 +3,6 @@
 import pymongo
 
 
-class SpiderPipeline(object):
-    def process_item(self, item, spider):
-        return item
-
-
 class CustomerReportsPipeline(object):
 
     """Responsible to store the scraped data into a MongoDB database.

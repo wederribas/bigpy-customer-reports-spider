@@ -8,10 +8,6 @@ def strip_string(value):
     return value.strip()
 
 
-class SpiderItem(scrapy.Item):
-    pass
-
-
 class Report(scrapy.Item):
 
     """Instantiate the customer reports items fields, with its processors.
