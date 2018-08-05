@@ -26,7 +26,7 @@ class CustomerReports(scrapy.Spider):
         URLs where the spider should start the crawl from
 
     Methods
-    ----------
+    -------
     parse(self, response)
         The default Scrapy method to parse the crawled data. In this
         case, gets the main page data and triggers the hidden form.
