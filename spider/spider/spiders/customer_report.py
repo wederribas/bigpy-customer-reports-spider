@@ -2,6 +2,7 @@
 
 import scrapy
 from scrapy.loader import ItemLoader
+from scrapy.exceptions import CloseSpider
 from spider.items import Report
 
 
@@ -43,13 +44,22 @@ class CustomerReports(scrapy.Spider):
     ]
 
     def parse(self, response):
-        """Trigger the hidden form POST to get the customer report."""
+        """Trigger the hidden form POST to get the customer report.
 
-        return scrapy.FormRequest(
-            url="https://consumidor.gov.br/pages/indicador/relatos/consultar",
-            callback=self.parse_response,
-            formdata={"indicePrimeiroResultado": "0", "palavrasChave": ""},
-        )
+        The goal is to get the first million reports. Each request
+        is limited by the endpoint to retrieve ten requests at a time.
+        """
+
+        total_reports = 1000000
+        reports_per_request = 10
+
+        for first_result in range(0, total_reports, reports_per_request):
+            yield scrapy.FormRequest(
+                url="https://consumidor.gov.br/pages/indicador/relatos/consultar",
+                callback=self.parse_response,
+                formdata={"indicePrimeiroResultado": str(first_result),
+                          "palavrasChave": ""},
+            )
 
     def parse_response(self, response):
         """Parses the response data, crawling the required fields and loading
@@ -58,53 +68,63 @@ class CustomerReports(scrapy.Spider):
         index = 0
         report_card_path = '//div[contains(@class,"cartao-relato")]'
 
+        if response.xpath(report_card_path).extract_first() is None:
+            raise CloseSpider(reason='No more items left to crawl')
+
         for crawled_report in response.xpath(report_card_path):
-            # Loader responsible to process input and populate an item
-            loader = ItemLoader(item=Report(), response=response)
+            try:
+                # Loader responsible to process input and populate an item
+                loader = ItemLoader(item=Report(), response=response)
 
-            loader.add_value(
-                'company_name',
-                crawled_report.xpath(
-                    '//*[@class="relatos-nome-empresa"]/a/text()').extract_first()
-            )
+                loader.add_value(
+                    'company_name',
+                    crawled_report.xpath(
+                        '//*[@class="relatos-nome-empresa"]/a/text()').extract_first()
+                )
 
-            users_report = crawled_report.xpath(
-                '//div[strong="Relato"]/p/text()').extract()
-            loader.add_value('user_report', users_report[index])
+                users_report = crawled_report.xpath(
+                    '//div[strong="Relato"]/p/text()').extract()
+                loader.add_value('user_report', users_report[index])
 
-            company_response = crawled_report.xpath(
-                '//div[strong="Resposta"]/p/text()').extract()
-            loader.add_value(
-                'company_response',
-                company_response[index]
-            )
+                company_response = crawled_report.xpath(
+                    '//div[strong="Resposta"]/p/text()').extract()
+                loader.add_value(
+                    'company_response',
+                    company_response[index]
+                )
 
-            loader.add_value(
-                'status',
-                crawled_report.xpath(
-                    '//h4[@class="relatos-status"]/text()').extract_first()
-            )
+                loader.add_value(
+                    'status',
+                    crawled_report.xpath(
+                        '//h4[@class="relatos-status"]/text()').extract_first()
+                )
 
-            users_feedback = crawled_report.xpath(
-                '//div[strong="Avaliação"]/p[2]/text()').extract()
-            loader.add_value('user_feedback', users_feedback[index])
+                users_feedback = crawled_report.xpath(
+                    '//div[strong="Avaliação"]/p[2]/text()').extract()
+                loader.add_value('user_feedback', users_feedback[index])
 
-            users_rating = crawled_report.xpath(
-                '//div[strong="Avaliação"]/p[1]/text()').extract()
-            loader.add_value('user_rating', users_rating[index])
+                users_rating = crawled_report.xpath(
+                    '//div[strong="Avaliação"]/p[1]/text()').extract()
+                loader.add_value('user_rating', users_rating[index])
 
-            user_date_location = crawled_report.xpath(
-                '//div[strong="Relato"]'
-                '/span[descendant::i[@class="glyphicon glyphicon-calendar"]]'
-                '/text()').extract()
-            user_date_location = [
-                item for item in user_date_location if item != ' ']
+                user_date_location = crawled_report.xpath(
+                    '//div[strong="Relato"]'
+                    '/span[descendant::i[contains(@class,"glyphicon")]]'
+                    '/text()').extract()
+                user_date_location = [
+                    item for item in user_date_location if item != ' ']
 
-            # Date and location are stored in the same element. Need to split.
-            date, location = user_date_location[index].split(',')
-            loader.add_value('date', date)
-            loader.add_value('location', location)
+                # Date and location are stored in the same element.
+                date, location = user_date_location[index].split(',')
+                loader.add_value('date', date)
+                loader.add_value('location', location)
 
-            index += 1
+                index += 1
 
-            yield loader.load_item()
+                yield loader.load_item()
+
+            except IndexError:
+                # Whenever an Index Error is raised, it means that the current
+                # report is missing some of the required data. In this case,
+                # ignore it by jumping to the next report.
+                continue
