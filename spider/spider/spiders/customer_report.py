@@ -116,8 +116,11 @@ class CustomerReports(scrapy.Spider):
 
                 # Date and location are stored in the same element.
                 date, location = user_date_location[index].split(',')
+                city, state = location.split(' - ')
+
                 loader.add_value('date', date)
-                loader.add_value('location', location)
+                loader.add_value('city', city)
+                loader.add_value('state', state)
 
                 index += 1
 
