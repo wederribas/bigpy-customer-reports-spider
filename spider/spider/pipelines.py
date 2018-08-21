@@ -86,5 +86,12 @@ class CustomerReportsPipeline(object):
             The scraped item to continue the pipelines chain
         """
 
-        self.db[self.collection_name].insert_one(dict(item))
+        crawled_items = dict(item)
+        parsed_items = dict()
+
+        for key in crawled_items:
+            parsed_items[key] = crawled_items[key][0]
+
+        self.db[self.collection_name].insert_one(parsed_items)
+
         return item
