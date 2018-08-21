@@ -1,11 +1,23 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from datetime import datetime
 from scrapy.loader.processors import MapCompose
 
 
 def strip_string(value):
     """Remove all blank spaces from the ends of a given value."""
     return value.strip()
+
+
+def parse_date(date):
+    """Parse date string to a date object recognized by MongoDB."""
+    return datetime.strptime(date, "%d/%m/%Y")
+
+
+def parse_to_int(string):
+    """Remove all non-digit chars from string and parse it to integer."""
+    parsed_string = list(filter(lambda x: x.isdigit(), string))
+    return int(parsed_string[0])
 
 
 class Report(scrapy.Item):
@@ -23,6 +35,7 @@ class Report(scrapy.Item):
     company_response = scrapy.Field(input_processor=MapCompose(strip_string))
     status = scrapy.Field(input_processor=MapCompose(strip_string))
     user_feedback = scrapy.Field(input_processor=MapCompose(strip_string))
-    user_rating = scrapy.Field(input_processor=MapCompose(strip_string))
-    date = scrapy.Field()
-    location = scrapy.Field()
+    user_rating = scrapy.Field(input_processor=MapCompose(parse_to_int))
+    date = scrapy.Field(input_processor=MapCompose(parse_date))
+    city = scrapy.Field(input_processor=MapCompose(strip_string))
+    state = scrapy.Field(input_processor=MapCompose(strip_string))
