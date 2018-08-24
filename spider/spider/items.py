@@ -10,8 +10,9 @@ def strip_string(value):
 
 
 def parse_date(date):
-    """Parse date string to a date object recognized by MongoDB."""
-    return datetime.strptime(date, "%d/%m/%Y")
+    """Parse date string to date epoch in millisecons."""
+    date_obj = datetime.strptime(date, "%d/%m/%Y")
+    return date_obj.timestamp() * 1000
 
 
 def parse_to_int(string):
