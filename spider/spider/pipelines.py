@@ -30,7 +30,7 @@ class CustomerReportsPipeline(object):
         Stores the scraped item into the database
     """
 
-    collection_name = 'customer_reports'
+    collection_name = 'bigpy_customerreports'
 
     def __init__(self, mongo_uri, mongo_db):
         """
